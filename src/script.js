@@ -16,6 +16,43 @@ const canvas = document.querySelector('canvas.webgl')
 const scene = new THREE.Scene()
 
 /**
+ * Textures
+ */
+const textureLoader = new THREE.TextureLoader()
+
+// Floor
+const floorAlphaTexture = textureLoader.load('./floor/alpha.jpg')
+const floorColorTexture = textureLoader.load(
+  './floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_diff_1k.jpg'
+)
+const floorARMTexture = textureLoader.load(
+  './floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_arm_1k.jpg'
+)
+const floorNormalTexture = textureLoader.load(
+  './floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_nor_gl_1k.jpg'
+)
+const floorDisplacementTexture = textureLoader.load(
+  './floor/coast_sand_rocks_02_1k/coast_sand_rocks_02_disp_1k.jpg'
+)
+
+floorColorTexture.colorSpace = THREE.SRGBColorSpace
+
+floorColorTexture.repeat.set(8, 8)
+floorARMTexture.repeat.set(8, 8)
+floorNormalTexture.repeat.set(8, 8)
+floorDisplacementTexture.repeat.set(8, 8)
+
+floorColorTexture.wrapS = THREE.RepeatWrapping
+floorARMTexture.wrapS = THREE.RepeatWrapping
+floorNormalTexture.wrapS = THREE.RepeatWrapping
+floorDisplacementTexture.wrapS = THREE.RepeatWrapping
+
+floorColorTexture.wrapT = THREE.RepeatWrapping
+floorARMTexture.wrapT = THREE.RepeatWrapping
+floorNormalTexture.wrapT = THREE.RepeatWrapping
+floorDisplacementTexture.wrapT = THREE.RepeatWrapping
+
+/**
  * House
  */
 
@@ -35,7 +72,16 @@ const scene = new THREE.Scene()
 // Floor  1m = 1
 const floor = new THREE.Mesh(
   new THREE.PlaneGeometry(20, 20),
-  new THREE.MeshStandardMaterial() // 사실적인 표현 PBR 텍스처
+  new THREE.MeshStandardMaterial({
+    alphaMap: floorAlphaTexture,
+    transparent: true, // alphaMap을 쓴다면 꼭!
+    map: floorColorTexture,
+    aoMap: floorARMTexture,
+    roughnessMap: floorARMTexture,
+    metalnessMap: floorARMTexture,
+    normalMap: floorNormalTexture,
+    // displacementMap:floorDisplacementTexture 여기부터
+  }) // 사실적인 표현 PBR 텍스처
 )
 floor.rotation.x = -Math.PI * 0.5
 scene.add(floor)
@@ -71,6 +117,53 @@ const door = new THREE.Mesh(
 door.position.y = 1
 door.position.z = 2 + 0.01 // z fighting 찌그러짐 방지
 house.add(door)
+
+// Bushes
+const bushGeometry = new THREE.SphereGeometry(1, 16, 16)
+const bushMaterial = new THREE.MeshStandardMaterial()
+
+const bush1 = new THREE.Mesh(bushGeometry, bushMaterial)
+bush1.scale.set(0.5, 0.5, 0.5) // bush1.scale.setScalar(0.5) 와 같다
+bush1.position.set(0.8, 0.2, 2.2)
+
+const bush2 = new THREE.Mesh(bushGeometry, bushMaterial)
+bush2.scale.set(0.25, 0.25, 0.25)
+bush2.position.set(1.4, 0.1, 2.1)
+
+const bush3 = new THREE.Mesh(bushGeometry, bushMaterial)
+bush3.scale.set(0.4, 0.4, 0.4)
+bush3.position.set(-0.8, 0.1, 2.2)
+
+const bush4 = new THREE.Mesh(bushGeometry, bushMaterial)
+bush4.scale.set(0.15, 0.15, 0.15)
+bush4.position.set(-1, 0.05, 2.6)
+house.add(bush1, bush2, bush3, bush4)
+
+// graves
+//random - 0부터 1사이 값 랜덤
+const graveGeometry = new THREE.BoxGeometry(0.6, 0.8, 0.2)
+const graveMaterial = new THREE.MeshStandardMaterial()
+
+const graves = new THREE.Group()
+scene.add(graves)
+
+for (let i = 0; i < 30; i++) {
+  const angle = Math.random() * Math.PI * 2
+  const radius = 3 + Math.random() * 4
+  const x = Math.sin(angle) * radius
+  const z = Math.cos(angle) * radius
+
+  // Mesh
+  const grave = new THREE.Mesh(graveGeometry, graveMaterial)
+  grave.position.x = x
+  grave.position.y = Math.random() * 0.4 // 0.8이 총 높이니까 그 반
+  grave.position.z = z
+  grave.rotation.x = (Math.random() - 0.5) * 0.4 // -0.5 는 +,- 값을 둘다 가져서 회전할때 다른방향 가능케 / 0.4를 곱해줌으로서 강도 조절
+  grave.rotation.y = (Math.random() - 0.5) * 0.4 // 0.4를 곱해줌으로서 강도 조절
+  grave.rotation.z = (Math.random() - 0.5) * 0.4 // 0.4를 곱해줌으로서 강도 조절
+
+  graves.add(grave)
+}
 
 /**
  * Lights
